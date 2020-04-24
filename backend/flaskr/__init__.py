@@ -1,9 +1,7 @@
-import os
 from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS, cross_origin
-import random
+from flask_cors import CORS
 
+from .find_category_type import find_category_type
 from .models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
@@ -30,7 +28,7 @@ def create_app(test_config=None):
 
     # TODO: Create an endpoint to handle GET requests for all available categories.
     @app.route("/categories", methods=["GET"])
-    def all_categories():
+    def get_categories():
         categories = Category.query.all()
         formatted_categories = [category.format() for category in categories]
 
@@ -40,18 +38,42 @@ def create_app(test_config=None):
             "success": True
         })
 
-    """
-  @TODO: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
+    # TODO:
+    #   Create an endpoint to handle GET requests for questions,
+    #   including pagination (every 10 questions).
+    #   This endpoint should return a list of questions,
+    #   number of total questions, current category, categories.
+    #
+    # TODO TEST: At this point, when you start the application
+    #   you should see questions and categories generated,
+    #   ten questions per page and pagination at the bottom of the screen for three pages.
+    #   Clicking on the page numbers should update the questions.
+    @app.route("/questions", methods=["GET"])
+    def get_questions():
+        # Pagination logic
+        page = request.args.get("page", 1, type=int)
 
-  TEST: At this point, when you start the application
-  you should see questions and categories generated,
-  ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
-  """
+        if page <= 0:
+            abort(400)
+
+        start = (page - 1) * 10
+        end = start + 10
+
+        questions = Question.query.all()
+        formatted_questions = [question.format() for question in questions]
+
+        categories = set()
+        for question in questions:
+            category_type = find_category_type(question.category)
+            categories.add(category_type)
+
+        return jsonify({
+            "categories": list(categories),
+            "current_category": None,
+            "questions": formatted_questions[start:end],
+            "total_questions": len(formatted_questions),
+            "success": True
+        })
 
     """
   @TODO: 
