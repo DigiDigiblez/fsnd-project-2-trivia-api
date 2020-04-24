@@ -1,6 +1,7 @@
 .vscode
 __pycache__
 venv
+.idea
 
 # OS generated files #
 ######################
@@ -11,3 +12,7 @@ venv
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# NPM generated files #
+######################
+*/node_modules/*/**
