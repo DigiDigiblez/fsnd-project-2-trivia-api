@@ -1,8 +1,11 @@
-from flask import Flask, request, abort, jsonify
+import os
+import sys
+
+from flask import Flask, request, abort, jsonify, flash
 from flask_cors import CORS
 
 from .find_category_type import find_category_type
-from .models import setup_db, Question, Category
+from .models import setup_db, Question, Category, db
 
 QUESTIONS_PER_PAGE = 10
 
@@ -11,6 +14,11 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
     setup_db(app)
+
+    app.config.from_mapping(
+        SECRET_KEY='dev',
+        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite')
+    )
 
     # TODO: Set up CORS. Allow "*" for origins. Delete the sample route after completing the TODOs
     cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -22,7 +30,7 @@ def create_app(test_config=None):
         response.headers.add("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
         return response
 
-    @app.route("/", methods=["GET"])
+    @app.route('/')
     def index():
         return "Welcome to Carl's Trivia App API!"
 
@@ -53,8 +61,9 @@ def create_app(test_config=None):
         # Pagination logic
         page = request.args.get("page", 1, type=int)
 
-        if page <= 0:
-            abort(400)
+        # TODO-FIX
+        if page <= 0 | page > 100:
+            abort(404)
 
         start = (page - 1) * 10
         end = start + 10
@@ -75,13 +84,34 @@ def create_app(test_config=None):
             "success": True
         })
 
-    """
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
+    # TODO:
+    #   Create an endpoint to DELETE question using a question ID.
+    #
+    # TODO TEST: When you click the trash icon next to a question, the question will be removed.
+    #   This removal will persist in the database and when you refresh the page.
+    @app.route("/questions/<int:question_id>", methods=["DELETE"])
+    def delete_question_by_id(question_id):
+        error = False
 
-  TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
-  """
+        try:
+            question_to_delete = Question.query.filter(Question.id == question_id).one_or_none()
+
+            if question_to_delete is None:
+                abort(404)
+
+            Question.delete(question_to_delete)
+        except:
+            db.session.rollback()
+            print(sys.exc_info())
+            error = True
+        finally:
+            db.session.close()
+            if error:
+                abort(500)
+
+        return jsonify({
+            "success": True
+        })
 
     """
   @TODO: 
@@ -131,6 +161,14 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   """
+
+    @app.errorhandler(404)
+    def resource_not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Resource not found",
+        }), 404
 
     if __name__ == "__main__":
         app.run()
