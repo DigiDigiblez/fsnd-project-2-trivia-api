@@ -21,7 +21,7 @@ const QuestionView = () => {
 
     const getQuestions = () => {
         axios
-            .get(`/questions?page=1`)
+            .get(`/questions?page=${state.page}`)
             .then(result => {
                 console.log("Success: ", result);
 
@@ -68,10 +68,11 @@ const QuestionView = () => {
 
     const getByCategory = id => {
         $.ajax({
-            url: `/categories/${id}/questions`, //TODO: update request URL
+            url: `/categories/${id}/questions`,
             type: "GET",
             success: result => {
                 setState({
+                    ...state,
                     questions: result.questions,
                     totalQuestions: result.total_questions,
                     currentCategory: result.current_category,

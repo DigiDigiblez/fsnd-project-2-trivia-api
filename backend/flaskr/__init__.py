@@ -148,6 +148,9 @@ def create_app(test_config=None):
             # Throw: Internal Server Error
             abort(500)
 
+    # TODO TEST: Search by any phrase. The questions list will update to include
+    #   only question that include that string within their question.
+    #   Try using the word "title" to start.
     # POST a search for a question
     @app.route("/search", methods=["POST"])
     def search_question():
@@ -192,23 +195,32 @@ def create_app(test_config=None):
 
     """
   @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  """
-
-    """
-  @TODO: 
   Create a GET endpoint to get questions based on category. 
 
   TEST: In the "List" tab / main screen, clicking on one of the 
   categories in the left column will cause only questions of that 
   category to be shown. 
   """
+
+    # GET all existing questions
+    @app.route("/categories/<int:category_id>/questions", methods=["GET"])
+    def get_questions_by_category(category_id):
+        category = Category.query.filter(Category.id == category_id).one_or_none()
+
+        if category is None:
+            # Throw Resource Not Found Error
+            abort(404)
+
+        category_questions = Question.query.filter(Question.category == category.id).all()
+
+        formatted_category_questions = [question.format() for question in category_questions]
+
+        return jsonify({
+            "current_category": None,
+            "questions": formatted_category_questions,
+            "total_questions": len(formatted_category_questions),
+            "success": True
+        })
 
     """
   @TODO: 
