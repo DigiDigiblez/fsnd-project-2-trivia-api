@@ -148,6 +148,48 @@ def create_app(test_config=None):
             # Throw: Internal Server Error
             abort(500)
 
+    # POST a search for a question
+    @app.route("/search", methods=["POST"])
+    def search_question():
+        try:
+            search_data = request.get_json()
+            search_term = search_data.get('searchTerm', None)
+
+            # If search is blank, show all questions to user (to allow them to reset search)
+            if search_term == '' or search_term is None:
+                all_questions = Question.query.all()
+                formatted_matched_questions = [question.format() for question in all_questions]
+
+                return jsonify({
+                    "current_category": None,
+                    "questions": formatted_matched_questions,
+                    "total_questions": len(formatted_matched_questions),
+                    "success": True
+                })
+
+            # User has submitted a search, return all fuzzied results
+            else:
+                search_pattern = "%{}%".format(search_term)
+
+                fuzzy_matched_questions = (
+                    Question
+                        .query
+                        .filter(Question.question.ilike(search_pattern))
+                        .all()
+                )
+
+                formatted_matched_questions = [question.format() for question in fuzzy_matched_questions]
+
+                return jsonify({
+                    "current_category": None,
+                    "questions": formatted_matched_questions,
+                    "total_questions": len(formatted_matched_questions),
+                    "success": True
+                })
+        except:
+            # Throw: Bad Request Error
+            abort(400)
+
     """
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -179,6 +221,14 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   """
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad request",
+        }), 400
 
     @app.errorhandler(404)
     def resource_not_found(error):

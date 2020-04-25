@@ -89,7 +89,7 @@ const QuestionView = () => {
 
     const submitSearch = searchTerm => {
         $.ajax({
-            url: `/questions`, //TODO: update request URL
+            url: `/search`,
             type: "POST",
             dataType: "json",
             contentType: "application/json",
@@ -100,6 +100,7 @@ const QuestionView = () => {
             crossDomain: true,
             success: result => {
                 setState({
+                    ...state,
                     questions: result.questions,
                     totalQuestions: result.total_questions,
                     currentCategory: result.current_category,
