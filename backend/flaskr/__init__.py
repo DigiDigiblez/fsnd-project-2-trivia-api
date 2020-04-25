@@ -1,5 +1,6 @@
 import os
 import sys
+from random import choice
 
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
@@ -233,6 +234,36 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   """
+
+    @app.route("/quizzes", methods=["POST"])
+    def get_random_quiz_question():
+        body = request.get_json()
+
+        # Retrieve quiz data
+        previous_questions = body.get("previous_questions")
+        quiz_category = body.get("quiz_category")
+
+        # Error handling
+        if previous_questions is None or quiz_category is None:
+            abort(400)
+
+        category_id = quiz_category['id']
+
+        random_question = choice(
+            Question.query.filter(Question.category == category_id).all()
+        )
+
+        current_attempts = 0
+        allowed_attempts = 3
+
+        while (current_attempts < allowed_attempts) or (random_question.id in previous_questions):
+            random_question = choice(Question.query.all())
+            current_attempts += 1
+
+        else:
+            return jsonify({
+                "question": random_question.format()
+            })
 
     @app.errorhandler(400)
     def bad_request(error):
