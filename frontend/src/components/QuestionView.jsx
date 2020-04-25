@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../stylesheets/App.css";
 import Question from "./Question";
+import { Redirect } from "react-router";
 import Search from "./Search";
 import $ from "jquery";
 
@@ -77,13 +78,11 @@ const QuestionView = () => {
                     totalQuestions: result.total_questions,
                     currentCategory: result.current_category,
                 });
-                return;
             },
             error: error => {
                 alert(
                     "Unable to load questions. Please try your request again",
                 );
-                return;
             },
         });
     };
@@ -106,13 +105,11 @@ const QuestionView = () => {
                     totalQuestions: result.total_questions,
                     currentCategory: result.current_category,
                 });
-                return;
             },
             error: error => {
                 alert(
                     "Unable to load questions. Please try your request again",
                 );
-                return;
             },
         });
     };
@@ -125,7 +122,7 @@ const QuestionView = () => {
                 )
             ) {
                 $.ajax({
-                    url: `/questions/${id}`, //TODO: update request URL
+                    url: `/questions/${id}`,
                     type: "DELETE",
                     success: result => {
                         getQuestions();
@@ -134,7 +131,6 @@ const QuestionView = () => {
                         alert(
                             "Unable to load questions. Please try your request again",
                         );
-                        return;
                     },
                 });
             }
@@ -177,6 +173,7 @@ const QuestionView = () => {
                     />
                 ))}
                 <div className="pagination-menu">
+                    <Redirect to={`/questions?page=${state.page}`} />
                     {createPagination()}
                 </div>
             </div>

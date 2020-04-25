@@ -3,5 +3,30 @@
 }
 
 #add-form {
+  align-items: center;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.well-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.well {
+  margin-top: 2rem;
+  padding: 2rem;
+  width: 20%;
+}
+
+#success-well {
+  background: rgba(87, 182, 2, 0.75);
+  position: absolute;
+}
+
+#failure-well {
+  background: rgba(182, 2, 2, 0.75);
+  position: absolute;
 }

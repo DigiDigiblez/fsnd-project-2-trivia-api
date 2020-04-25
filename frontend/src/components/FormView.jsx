@@ -17,17 +17,15 @@ class FormView extends Component {
 
     componentDidMount() {
         $.ajax({
-            url: `/categories`, //TODO: update request URL
+            url: `/categories`,
             type: "GET",
             success: result => {
                 this.setState({ categories: result.categories });
-                return;
             },
             error: error => {
                 alert(
                     "Unable to load categories. Please try your request again",
                 );
-                return;
             },
         });
     }
@@ -35,7 +33,7 @@ class FormView extends Component {
     submitQuestion = event => {
         event.preventDefault();
         $.ajax({
-            url: "/questions", //TODO: update request URL
+            url: "/questions",
             type: "POST",
             dataType: "json",
             contentType: "application/json",
@@ -51,13 +49,30 @@ class FormView extends Component {
             crossDomain: true,
             success: result => {
                 document.getElementById("add-question-form").reset();
-                return;
+                document
+                    .querySelector("#success-well")
+                    .classList.toggle("hidden");
+
+                setTimeout(
+                    () =>
+                        document
+                            .querySelector("#success-well")
+                            .classList.toggle("hidden"),
+                    2000,
+                );
             },
             error: error => {
-                alert(
-                    "Unable to add question. Please try your request again",
+                document
+                    .querySelector("#failure-well")
+                    .classList.toggle("hidden");
+
+                setTimeout(
+                    () =>
+                        document
+                            .querySelector("#failure-well")
+                            .classList.toggle("hidden"),
+                    2000,
                 );
-                return;
             },
         });
     };
@@ -80,6 +95,7 @@ class FormView extends Component {
                             type="text"
                             name="question"
                             onChange={this.handleChange}
+                            required
                         />
                     </label>
                     <label>
@@ -88,13 +104,15 @@ class FormView extends Component {
                             type="text"
                             name="answer"
                             onChange={this.handleChange}
+                            required
                         />
                     </label>
                     <label>
                         Difficulty
                         <select
                             name="difficulty"
-                            onChange={this.handleChange}>
+                            onChange={this.handleChange}
+                            required>
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -106,7 +124,8 @@ class FormView extends Component {
                         Category
                         <select
                             name="category"
-                            onChange={this.handleChange}>
+                            onChange={this.handleChange}
+                            required>
                             {Object.keys(this.state.categories).map(
                                 id => {
                                     return (
@@ -128,6 +147,15 @@ class FormView extends Component {
                         value="Submit"
                     />
                 </form>
+                <div className="well-wrapper">
+                    <div className={`well hidden`} id="success-well">
+                        Question successfully added!
+                    </div>
+                    <div className={`well hidden`} id="failure-well">
+                        Unable to add question. Please try your
+                        request again.
+                    </div>
+                </div>
             </div>
         );
     }
