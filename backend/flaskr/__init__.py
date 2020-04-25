@@ -1,7 +1,7 @@
 import os
 import sys
 
-from flask import Flask, request, abort, jsonify, flash
+from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 
 from .find_category_type import find_category_type
@@ -20,10 +20,8 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite')
     )
 
-    # TODO: Set up CORS. Allow "*" for origins. Delete the sample route after completing the TODOs
     cors = CORS(app, resources={r"*": {"origins": "*"}})
 
-    # TODO: Use the after_request decorator to set Access-Control-Allow
     @app.after_request
     def after_request(response):
         response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -34,15 +32,18 @@ def create_app(test_config=None):
     def index():
         return "Welcome to Carl's Trivia App API!"
 
-    # TODO: Create an endpoint to handle GET requests for all available categories.
     @app.route("/categories", methods=["GET"])
     def get_categories():
-        categories = Category.query.all()
-        formatted_categories = [category.format() for category in categories]
+        questions = Question.query.all()
+
+        categories = set()
+        for question in questions:
+            category_type = find_category_type(question.category)
+            categories.add(category_type)
 
         return jsonify({
-            "categories": formatted_categories,
-            "total_categories": len(formatted_categories),
+            "categories": list(categories),
+            "total_categories": len(categories),
             "success": True
         })
 
@@ -56,6 +57,7 @@ def create_app(test_config=None):
     #   you should see questions and categories generated,
     #   ten questions per page and pagination at the bottom of the screen for three pages.
     #   Clicking on the page numbers should update the questions.
+    # GET all existing questions
     @app.route("/questions", methods=["GET"])
     def get_questions():
         # Pagination logic
@@ -84,11 +86,9 @@ def create_app(test_config=None):
             "success": True
         })
 
-    # TODO:
-    #   Create an endpoint to DELETE question using a question ID.
-    #
     # TODO TEST: When you click the trash icon next to a question, the question will be removed.
     #   This removal will persist in the database and when you refresh the page.
+    # DELETE an existing question (via its ID)
     @app.route("/questions/<int:question_id>", methods=["DELETE"])
     def delete_question_by_id(question_id):
         error = False
@@ -113,16 +113,40 @@ def create_app(test_config=None):
             "success": True
         })
 
-    """
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
-  category, and difficulty score.
+    # TODO TEST: When you submit a question on the "Add" tab,
+    #       the form will clear and the question will appear at the end of the last page
+    #       of the questions list in the "List" tab.
 
-  TEST: When you submit a question on the "Add" tab, 
-  the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
-  """
+    # POST a new question
+    @app.route("/questions", methods=["POST"])
+    def post_question():
+        try:
+            new_question_data = request.get_json()
+
+            # Retrieve the parts of the question from the body
+            question_text = new_question_data.get('question', None)
+            answer_text = new_question_data.get('answer', None)
+            category = new_question_data.get('category', None)
+            difficulty = new_question_data.get('difficulty', None)
+
+            # Build a new question object
+            new_question = Question(
+                question=question_text,
+                answer=answer_text,
+                category=category,
+                difficulty=difficulty
+            )
+
+            # Insert it into the db
+            new_question.insert()
+
+            return jsonify({
+                "success": True,
+                "message": "Question successfully added."
+            })
+        except:
+            # Throw: Internal Server Error
+            abort(500)
 
     """
   @TODO: 
@@ -156,12 +180,6 @@ def create_app(test_config=None):
   and shown whether they were correct or not. 
   """
 
-    """
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  """
-
     @app.errorhandler(404)
     def resource_not_found(error):
         return jsonify({
@@ -169,6 +187,22 @@ def create_app(test_config=None):
             "error": 404,
             "message": "Resource not found",
         }), 404
+
+    @app.errorhandler(422)
+    def unprocessable_entity(error):
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable entity",
+        }), 422
+
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+            "success": False,
+            "error": 500,
+            "message": "Internal server error",
+        }), 500
 
     if __name__ == "__main__":
         app.run()
