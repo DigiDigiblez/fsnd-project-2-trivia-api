@@ -2,12 +2,14 @@ import os
 import sys
 from math import ceil
 from random import choice
-
+from dotenv import load_dotenv
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 
 from .find_category_type import find_category_type
 from .models import setup_db, Question, Category, db
+
+load_dotenv()
 
 QUESTIONS_PER_PAGE = 10
 
@@ -32,7 +34,7 @@ def create_app(test_config=None):
     setup_db(app)
 
     app.config.from_mapping(
-        SECRET_KEY='dev',
+        SECRET_KEY=os.getenv('SECRET_KEY'),
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite')
     )
 
@@ -63,7 +65,7 @@ def create_app(test_config=None):
             "success": True
         })
 
-    # GET all questions
+    # GET 10 questions based on the current page
     @app.route("/questions", methods=["GET"])
     def get_questions():
         # Pagination logic
@@ -184,7 +186,7 @@ def create_app(test_config=None):
         except:
             abort(CODE["400_BAD_REQUEST"])
 
-    # GET all existing questions
+    # GET all questions of a certain category
     @app.route("/categories/<int:category_id>/questions", methods=["GET"])
     def get_questions_by_category(category_id):
         category = Category.query.filter(Category.id == category_id).one_or_none()
@@ -203,6 +205,7 @@ def create_app(test_config=None):
             "success": True
         })
 
+    # POST past quiz questions and get new random question
     @app.route("/quizzes", methods=["POST"])
     def get_random_quiz_question():
         body = request.get_json()
