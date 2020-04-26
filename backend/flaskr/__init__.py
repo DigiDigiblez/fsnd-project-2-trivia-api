@@ -18,6 +18,7 @@ CODE = {
     # Client error codes
     "400_BAD_REQUEST": 400,
     "404_RESOURCE_NOT_FOUND": 404,
+    "405_METHOD_NOT_ALLOWED": 405,
     "422_UNPROCESSABLE_ENTITY": 422,
 
     # Server error codes
@@ -43,7 +44,7 @@ def create_app(test_config=None):
         response.headers.add("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
         return response
 
-    @app.route('/')
+    @app.route('/', methods=["GET"])
     def index():
         return "Welcome to Carl's Trivia App API!"
 
@@ -117,10 +118,6 @@ def create_app(test_config=None):
             "success": True
         })
 
-    # TODO TEST: When you submit a question on the "Add" tab,
-    #       the form will clear and the question will appear at the end of the last page
-    #       of the questions list in the "List" tab.
-
     # POST a new question
     @app.route("/questions", methods=["POST"])
     def post_question():
@@ -151,9 +148,6 @@ def create_app(test_config=None):
         except:
             abort(CODE["500_INTERNAL_SERVER_ERROR"])
 
-    # TODO TEST: Search by any phrase. The questions list will update to include
-    #   only question that include that string within their question.
-    #   Try using the word "title" to start.
     # POST a search for a question
     @app.route("/search", methods=["POST"])
     def search_question():
@@ -195,15 +189,6 @@ def create_app(test_config=None):
         except:
             abort(CODE["400_BAD_REQUEST"])
 
-    """
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
-
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
-  """
-
     # GET all existing questions
     @app.route("/categories/<int:category_id>/questions", methods=["GET"])
     def get_questions_by_category(category_id):
@@ -222,18 +207,6 @@ def create_app(test_config=None):
             "total_questions": len(formatted_category_questions),
             "success": True
         })
-
-    """
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
-
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
-  """
 
     @app.route("/quizzes", methods=["POST"])
     def get_random_quiz_question():
@@ -279,6 +252,14 @@ def create_app(test_config=None):
             "error": CODE["404_RESOURCE_NOT_FOUND"],
             "message": "Resource not found",
         }), CODE["404_RESOURCE_NOT_FOUND"]
+
+    @app.errorhandler(CODE["405_METHOD_NOT_ALLOWED"])
+    def resource_not_found(error):
+        return jsonify({
+            "success": False,
+            "error": CODE["405_METHOD_NOT_ALLOWED"],
+            "message": "Method not allowed",
+        }), CODE["405_METHOD_NOT_ALLOWED"]
 
     @app.errorhandler(CODE["422_UNPROCESSABLE_ENTITY"])
     def unprocessable_entity(error):
