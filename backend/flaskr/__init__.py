@@ -11,6 +11,19 @@ from .models import setup_db, Question, Category, db
 
 QUESTIONS_PER_PAGE = 10
 
+CODE = {
+    # Success codes
+    "200_OK": 200,
+
+    # Client error codes
+    "400_BAD_REQUEST": 400,
+    "404_RESOURCE_NOT_FOUND": 404,
+    "422_UNPROCESSABLE_ENTITY": 422,
+
+    # Server error codes
+    "500_INTERNAL_SERVER_ERROR": 500
+}
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -49,30 +62,19 @@ def create_app(test_config=None):
             "success": True
         })
 
-    # TODO:
-    #   Create an endpoint to handle GET requests for questions,
-    #   including pagination (every 10 questions).
-    #   This endpoint should return a list of questions,
-    #   number of total questions, current category, categories.
-    #
-    # TODO TEST: At this point, when you start the application
-    #   you should see questions and categories generated,
-    #   ten questions per page and pagination at the bottom of the screen for three pages.
-    #   Clicking on the page numbers should update the questions.
-    # GET all existing questions
+    # GET all questions
     @app.route("/questions", methods=["GET"])
     def get_questions():
         # Pagination logic
         page = request.args.get("page", 1, type=int)
         total_questions = len(Question.query.all())
-        last_page = ceil(total_questions / 10)
+        last_page = ceil(total_questions / QUESTIONS_PER_PAGE)
 
-        if page <= 0 | page > last_page:
-            # Throw Resource Not Found Error
-            abort(404)
+        if page <= 0 or page > last_page:
+            abort(CODE["404_RESOURCE_NOT_FOUND"])
 
-        start = (page - 1) * 10
-        end = start + 10
+        start = (page - 1) * QUESTIONS_PER_PAGE
+        end = start + QUESTIONS_PER_PAGE
 
         questions = Question.query.all()
         formatted_questions = [question.format() for question in questions]
@@ -90,19 +92,16 @@ def create_app(test_config=None):
             "success": True
         })
 
-    # TODO TEST: When you click the trash icon next to a question, the question will be removed.
-    #   This removal will persist in the database and when you refresh the page.
-    # DELETE an existing question (via its ID)
+    # DELETE a question (via it's id)
     @app.route("/questions/<int:question_id>", methods=["DELETE"])
-    def delete_question_by_id(question_id):
+    def delete_question(question_id):
         error = False
 
         try:
             question_to_delete = Question.query.filter(Question.id == question_id).one_or_none()
 
             if question_to_delete is None:
-                # Throw Resource Not Found Error
-                abort(404)
+                abort(CODE["422_UNPROCESSABLE_ENTITY"])
 
             Question.delete(question_to_delete)
         except:
@@ -112,8 +111,7 @@ def create_app(test_config=None):
         finally:
             db.session.close()
             if error:
-                # Throw Resource Not Found Error
-                abort(500)
+                abort(CODE["500_INTERNAL_SERVER_ERROR"])
 
         return jsonify({
             "success": True
@@ -151,8 +149,7 @@ def create_app(test_config=None):
                 "message": "Question successfully added."
             })
         except:
-            # Throw Resource Not Found Error
-            abort(500)
+            abort(CODE["500_INTERNAL_SERVER_ERROR"])
 
     # TODO TEST: Search by any phrase. The questions list will update to include
     #   only question that include that string within their question.
@@ -196,8 +193,7 @@ def create_app(test_config=None):
                     "success": True
                 })
         except:
-            # Throw: Bad Request Error
-            abort(400)
+            abort(CODE["400_BAD_REQUEST"])
 
     """
   @TODO: 
@@ -214,8 +210,7 @@ def create_app(test_config=None):
         category = Category.query.filter(Category.id == category_id).one_or_none()
 
         if category is None:
-            # Throw Resource Not Found Error
-            abort(404)
+            abort(CODE["404_RESOURCE_NOT_FOUND"])
 
         category_questions = Question.query.filter(Question.category == category.id).all()
 
@@ -249,8 +244,7 @@ def create_app(test_config=None):
         quiz_category = body.get("quiz_category")
 
         if previous_questions is None or quiz_category is None:
-            # Throw: Bad Request Error
-            abort(400)
+            abort(CODE["400_BAD_REQUEST"])
 
         category_id = quiz_category['id']
 
@@ -270,37 +264,37 @@ def create_app(test_config=None):
                 "question": random_question.format()
             })
 
-    @app.errorhandler(400)
+    @app.errorhandler(CODE["400_BAD_REQUEST"])
     def bad_request(error):
         return jsonify({
             "success": False,
-            "error": 400,
+            "error": CODE["400_BAD_REQUEST"],
             "message": "Bad request",
-        }), 400
+        }), CODE["400_BAD_REQUEST"]
 
-    @app.errorhandler(404)
+    @app.errorhandler(CODE["404_RESOURCE_NOT_FOUND"])
     def resource_not_found(error):
         return jsonify({
             "success": False,
-            "error": 404,
+            "error": CODE["404_RESOURCE_NOT_FOUND"],
             "message": "Resource not found",
-        }), 404
+        }), CODE["404_RESOURCE_NOT_FOUND"]
 
-    @app.errorhandler(422)
+    @app.errorhandler(CODE["422_UNPROCESSABLE_ENTITY"])
     def unprocessable_entity(error):
         return jsonify({
             "success": False,
-            "error": 422,
+            "error": CODE["422_UNPROCESSABLE_ENTITY"],
             "message": "Unprocessable entity",
-        }), 422
+        }), CODE["422_UNPROCESSABLE_ENTITY"]
 
-    @app.errorhandler(500)
+    @app.errorhandler(CODE["500_INTERNAL_SERVER_ERROR"])
     def internal_server_error(error):
         return jsonify({
             "success": False,
-            "error": 500,
+            "error": CODE["500_INTERNAL_SERVER_ERROR"],
             "message": "Internal server error",
-        }), 500
+        }), CODE["500_INTERNAL_SERVER_ERROR"]
 
     if __name__ == "__main__":
         app.run()
