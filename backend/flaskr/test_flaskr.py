@@ -38,25 +38,6 @@ class TriviaTestCase(unittest.TestCase):
         """Executed after reach test"""
         pass
 
-    # GET '/' endpoint (200)
-    def test_200_for_get_index(self):
-        """Testing for 200 on the GET '/' endpoint"""
-        res = self.client().get('/')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, CODE["200_OK"])
-        self.assertEqual(data['success'], True)
-
-    # OPTIONS '/' endpoint (405)
-    def test_405_for_options_index(self):
-        """OPTIONS '/' endpoint (405)"""
-        res = self.client().options('/')
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, CODE["405_METHOD_NOT_ALLOWED"])
-        self.assertEqual(data["success"], False)
-        self.assertEqual(data["message"], "Method not allowed")
-
     # GET '/categories' endpoint (200)
     def test_200_for_get_categories(self):
         """GET '/categories' endpoint (200)"""
@@ -121,11 +102,14 @@ class TriviaTestCase(unittest.TestCase):
     # DELETE '/questions/<int:question_id>' endpoint (200)
     def test_200_for_delete_question(self):
         """DELETE '/questions/<int:question_id>' endpoint (200)"""
-        res = self.client().delete("/questions/3")
+        res = self.client().delete("/questions/1")
         data = json.loads(res.data)
+
+        question = Question.query.filter(Question.id == 1).one_or_none()
 
         self.assertEqual(res.status_code, CODE["200_OK"])
         self.assertEqual(data["success"], True)
+        self.assertEqual(question, None)  # Question has been deleted
 
     # DELETE '/questions/<int:question_id>' endpoint (404) (1st)
     def test_404_for_delete_question_I(self):
@@ -137,15 +121,14 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["success"], False)
         self.assertEqual(data["message"], "Resource not found")
 
-    # DELETE '/questions/<int:question_id>' endpoint (422) (2nd)
-    def test_404_for_delete_question_II(self):
-        """DELETE '/questions/<int:question_id>' endpoint (422) (2nd)"""
+    # DELETE '/questions/<int:question_id>' endpoint (200) (2nd)
+    def test_200_for_delete_question_II(self):
+        """DELETE '/questions/<int:question_id>' endpoint (200) (2nd)"""
         res = self.client().delete("/questions/77777")
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, CODE["422_UNPROCESSABLE_ENTITY"])
-        self.assertEqual(data["success"], False)
-        self.assertEqual(data["message"], "Unprocessable entity")
+        self.assertEqual(res.status_code, CODE["200_OK"])
+        self.assertEqual(data["success"], True)
 
     # POST '/questions' endpoint (200)
     def test_200_for_post_question(self):
@@ -253,7 +236,7 @@ class TriviaTestCase(unittest.TestCase):
     # GET '/categories/<int:category_id>/questions' endpoint (404)
     def test_404_for_get_question_by_category_id(self):
         """GET '/categories/<int:category_id>/questions' endpoint (404)"""
-        res = self.client().get("/categories/-1/questions")
+        res = self.client().get("/categories/0/questions")
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, CODE["404_RESOURCE_NOT_FOUND"])
@@ -263,7 +246,7 @@ class TriviaTestCase(unittest.TestCase):
     # POST '/categories/<int:category_id>/questions' endpoint (405)
     def test_404_for_get_question_by_category_id(self):
         """POST '/categories/<int:category_id>/questions' endpoint (405)"""
-        res = self.client().post("/categories/-1/questions")
+        res = self.client().post("/categories/0/questions")
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, CODE["405_METHOD_NOT_ALLOWED"])
@@ -271,9 +254,9 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["message"], "Method not allowed")
 
     # DELETE '/categories/<int:category_id>/questions' endpoint (405)
-    def test_404_get_question_by_category_id(self):
+    def test_405_get_question_by_category_id(self):
         """DELETE '/categories/<int:category_id>/questions' endpoint (405)"""
-        res = self.client().delete("/categories/-1/questions")
+        res = self.client().delete("/categories/0/questions")
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, CODE["405_METHOD_NOT_ALLOWED"])

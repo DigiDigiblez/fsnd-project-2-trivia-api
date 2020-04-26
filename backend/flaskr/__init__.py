@@ -101,9 +101,6 @@ def create_app(test_config=None):
         try:
             question_to_delete = Question.query.filter(Question.id == question_id).one_or_none()
 
-            if question_to_delete is None:
-                abort(CODE["422_UNPROCESSABLE_ENTITY"])
-
             Question.delete(question_to_delete)
         except:
             db.session.rollback()
@@ -111,8 +108,6 @@ def create_app(test_config=None):
             error = True
         finally:
             db.session.close()
-            if error:
-                abort(CODE["500_INTERNAL_SERVER_ERROR"])
 
         return jsonify({
             "success": True
@@ -234,7 +229,8 @@ def create_app(test_config=None):
 
         else:
             return jsonify({
-                "question": random_question.format()
+                "question": random_question.format(),
+                "success": True
             })
 
     @app.errorhandler(CODE["400_BAD_REQUEST"])
