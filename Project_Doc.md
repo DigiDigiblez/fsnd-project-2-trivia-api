@@ -28,7 +28,7 @@ Now, you can setup the project and run it by executing the `run.sh` bash file pr
 Additionally, you will also need to create a test database in psql, e.g. `CREATE DATABASE trivia_test;`, and fill that also with the same dummy data using `psql trivia_test < trivia.psql;`. Run the tests by right-clicking and running the `test_flaskr.py` file. All tests should pass successfully. It they don't the database might not be correctly setup properly, so refer back to the abovementioned steps to resolve this.
 
 ## API Reference
-Please refer to the [API reference docs](./API_Doc.md) file to understand how the API operates.
+Please refer to the [API reference docs](backend/API_Doc.md) file to understand how the API operates.
 
 ## Authorial decrees
 - Carl Bowen: Developed this app
