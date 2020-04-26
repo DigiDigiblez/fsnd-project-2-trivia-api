@@ -2,27 +2,21 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../stylesheets/App.css";
 import Question from "./Question";
-import { Redirect } from "react-router";
+import { Redirect, useLocation } from "react-router";
 import Search from "./Search";
 import $ from "jquery";
 
 const QuestionView = () => {
+    let location = useLocation();
+    const currentPage = location.search.replace(/\D/g, "");
+
     const [state, setState] = useState({
         questions: [],
-        page: localStorage.getItem("currentPage"),
+        page: currentPage,
         totalQuestions: 0,
         categories: {},
         currentCategory: null,
     });
-
-    // Get questions only on mount and set up page number in LS
-    useEffect(() => {
-        if (!localStorage.getItem("currentPage")) {
-            localStorage.setItem("currentPage", "1");
-        }
-
-        getQuestions();
-    }, []);
 
     // Update questions whenever the page number changes via the pagination
     useEffect(() => {
@@ -52,7 +46,6 @@ const QuestionView = () => {
     };
 
     const selectPage = num => {
-        localStorage.setItem("currentPage", num);
         setState({ ...state, page: num });
     };
 
@@ -65,7 +58,7 @@ const QuestionView = () => {
                 <span
                     key={i}
                     className={`page-num ${
-                        i === state.page ? "active" : ""
+                        i == state.page ? "active" : ""
                     }`}
                     onClick={() => {
                         selectPage(i);
