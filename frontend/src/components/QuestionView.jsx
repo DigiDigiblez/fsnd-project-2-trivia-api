@@ -9,16 +9,25 @@ import $ from "jquery";
 const QuestionView = () => {
     const [state, setState] = useState({
         questions: [],
-        page: 1,
+        page: localStorage.getItem("currentPage"),
         totalQuestions: 0,
         categories: {},
         currentCategory: null,
     });
 
-    // Get questions only on mount
+    // Get questions only on mount and set up page number in LS
     useEffect(() => {
+        if (!localStorage.getItem("currentPage")) {
+            localStorage.setItem("currentPage", "1");
+        }
+
         getQuestions();
     }, []);
+
+    // Update questions whenever the page number changes via the pagination
+    useEffect(() => {
+        getQuestions();
+    }, [state.page]);
 
     const getQuestions = () => {
         axios
@@ -43,6 +52,7 @@ const QuestionView = () => {
     };
 
     const selectPage = num => {
+        localStorage.setItem("currentPage", num);
         setState({ ...state, page: num });
     };
 

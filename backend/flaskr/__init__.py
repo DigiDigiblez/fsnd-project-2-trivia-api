@@ -1,5 +1,6 @@
 import os
 import sys
+from math import ceil
 from random import choice
 
 from flask import Flask, request, abort, jsonify
@@ -21,7 +22,7 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite')
     )
 
-    cors = CORS(app, resources={r"*": {"origins": "*"}})
+    CORS(app, resources={r"*": {"origins": "*"}})
 
     @app.after_request
     def after_request(response):
@@ -63,9 +64,11 @@ def create_app(test_config=None):
     def get_questions():
         # Pagination logic
         page = request.args.get("page", 1, type=int)
+        total_questions = len(Question.query.all())
+        last_page = ceil(total_questions / 10)
 
-        # TODO-FIX
-        if page <= 0 | page > 100:
+        if page <= 0 | page > last_page:
+            # Throw Resource Not Found Error
             abort(404)
 
         start = (page - 1) * 10
@@ -98,6 +101,7 @@ def create_app(test_config=None):
             question_to_delete = Question.query.filter(Question.id == question_id).one_or_none()
 
             if question_to_delete is None:
+                # Throw Resource Not Found Error
                 abort(404)
 
             Question.delete(question_to_delete)
@@ -108,6 +112,7 @@ def create_app(test_config=None):
         finally:
             db.session.close()
             if error:
+                # Throw Resource Not Found Error
                 abort(500)
 
         return jsonify({
@@ -146,7 +151,7 @@ def create_app(test_config=None):
                 "message": "Question successfully added."
             })
         except:
-            # Throw: Internal Server Error
+            # Throw Resource Not Found Error
             abort(500)
 
     # TODO TEST: Search by any phrase. The questions list will update to include
@@ -243,8 +248,8 @@ def create_app(test_config=None):
         previous_questions = body.get("previous_questions")
         quiz_category = body.get("quiz_category")
 
-        # Error handling
         if previous_questions is None or quiz_category is None:
+            # Throw: Bad Request Error
             abort(400)
 
         category_id = quiz_category['id']
